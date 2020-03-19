@@ -6,12 +6,14 @@ import numpy as np
 class QLearn:
     def __init__(self, labels, learning_rate=0.7, gamma=0.8, epsilon=0.1, no_repeat=False, verbose=False):
         """
-        :param labels: List of policies Q-learn can apply
+        Q-learn object
+
+        :param labels: The list of symbols that represents every possible policy
         :param learning_rate:
         :param gamma:
-        :param epsilon:
-        :param no_repeat:
-        :param verbose:
+        :param epsilon: Chances of taking random policy every new interaction
+        :param no_repeat: If true, the random policy is chosen only from not explored policies
+        :param verbose: If true, print some useful info
         """
         self.epsilon = epsilon
         self.data = {}
@@ -22,23 +24,26 @@ class QLearn:
         self.memory = dict()
         self.no_repeat = no_repeat
 
-    def push_q_data(self, info, destination):
+    def push_q_data(self, state):
         """
-        Makes sure that info is contained in destination
+        Makes sure that state is known by q-learn
 
-        :param info:
-        :param destination:
+        :param state: State representation
+        :type state: str
         :return:
         """
-        if info not in destination.keys():
-            destination[info] = np.zeros(len(self.labels))
+        if state not in self.data.keys():
+            self.data[state] = np.zeros(len(self.labels))
+        if state not in self.memory.keys():
+            self.memory[state] = np.zeros(len(self.labels))
 
     def select_best(self, state):
         """
         Given a state selects the known best policy
 
-        :param state:
-        :return:
+        :param state: State representation
+        :type state: str
+        :return: Chosen policy from self.labels
         """
         if self.verbose:
             print("select from: {}".format(self.data[state]))
@@ -50,15 +55,22 @@ class QLearn:
 
         :param policies: List of selectable policies
         :type policies: list
-        :return:
+        :return: Chosen policy from self.labels
         """
         if self.verbose:
             print("random select")
         return random.choice(policies)
 
     def select_rand_not_explored(self, state):
+        """
+        Random select a not explored policy given the state
+
+        :param state: State representation
+        :type state: str
+        :return: Not explored policy
+        """
         not_explored = []
-        self.push_q_data(state, self.memory)
+        self.push_q_data(state)
         for i in range(len(self.memory[state])):
             if self.memory[state][i] == 0:
                 not_explored.append(self.labels[i])
@@ -68,9 +80,15 @@ class QLearn:
             return self.select_best(state)
 
     def interact(self, state):
+        """
+        Takes a decision based on the Q-learning learning algorithm given a state and preloaded hyper-params
+
+        :param state: State representation (list or numpy.array)
+        :type state: list, numpy.array
+        :return: Chosen policy from self.labels
+        """
         state = str(state)
-        if state not in self.data.keys():
-            self.data[state] = np.zeros(len(self.labels))
+        self.push_q_data(state)
         if random.uniform(0, 1) < self.epsilon:
             if self.no_repeat:
                 return self.select_rand_not_explored(state)
@@ -83,8 +101,10 @@ class QLearn:
         """
         Updates the q-table given old_state actual_state reward and associated policy
 
-        :param old_state: Representation of the old_state
-        :param actual_state: Representation of actual_state
+        q_t := (1 - learning_rate) * q_(t-1) + learning_rate * (reward + gamma * max(q_t) )
+
+        :param old_state: Representation of the old_state (list or numpy.array)
+        :param actual_state: Representation of actual_state (list or numpy.array)
         :param reward: Reward obtained by going from old_state to actual_state
         :param policy: Action taken in old_state that leads to actual_state
         :return:
@@ -96,10 +116,8 @@ class QLearn:
         """
         old_state = str(old_state)
         actual_state = str(actual_state)
-        self.push_q_data(actual_state, self.data)
-        self.push_q_data(old_state, self.data)
-        self.push_q_data(actual_state, self.memory)
-        self.push_q_data(old_state, self.memory)
+        self.push_q_data(actual_state)
+        self.push_q_data(old_state)
         self.memory[old_state][policy] = 1
         qt = self.data[actual_state].max()
         self.data[old_state][policy] = self.data[old_state][policy] + self.learning_rate * (

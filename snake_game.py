@@ -89,6 +89,12 @@ class SnakeGame:
         self.screen_draw()
 
     def ql_pre_tasks(self, settler):
+        """
+        A convenient way to save some state data
+
+        :param settler:
+        :return:
+        """
         old_board = self.board2set()
         old_points = self.points
         old_dist = dist(self.snake.head_position, self.food.position)
@@ -96,6 +102,10 @@ class SnakeGame:
         return old_board, old_dist, old_points, policy
 
     def board2set(self):
+        """
+        Returns some of the screen info in list form
+        :return:
+        """
         xdir = 0
         if self.food.position[0] > self.snake.head_position[0]:
             xdir = 1
@@ -123,6 +133,15 @@ class SnakeGame:
         return s
 
     def play(self):
+        """
+        User playable version of SnakeGame
+
+        Use arrows to move
+
+        Have fun :D
+
+        :return:
+        """
         self.load_new_game()
         while True:
             self.check_user_events()
@@ -131,6 +150,15 @@ class SnakeGame:
                 return self.points
 
     def demo(self, settler, light_mode=False):
+        """
+        Modification of self.play operable by the QLearn object
+
+        :param settler: A preloaded QLearn object
+        :type settler: Qlearn
+        :param light_mode: If true, graphics won't be loaded (for training purposes)
+        :type light_mode: bool
+        :return: A more experienced Qlearn object
+        """
         if light_mode:
             self.food.go_new_position()
         else:
@@ -142,11 +170,12 @@ class SnakeGame:
                 self.light_tasks()
             else:
                 self.background_tasks()
+            distance_reward = dist_reward(old_dist, dist(self.snake.head_position, self.food.position))
+            total_reward = state2int(self.points - old_points, distance_reward)
             settler.update_q(
                 old_board,
                 self.board2set(),
-                state2int(self.points - old_points,
-                          dp_reward(old_dist, dist(self.snake.head_position, self.food.position))),
+                total_reward,
                 policy
             )
             if self.end_flag:
@@ -160,4 +189,4 @@ if __name__ == '__main__':
     ai.gamma = 0
     ai.epsilon = 0
     game.demo(ai)
-    # game.play()
+    game.play()
