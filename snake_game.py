@@ -23,6 +23,10 @@ class SnakeGame:
         self.radio = 10
         self.verbose = False
 
+    def load_new_game(self):
+        pygame.display.set_caption("Super snake bros 3 The Fall of Reach: Revenge")
+        self.food.go_new_position()
+
     def check_events(self):
         if self.snake.head_position[0] < 0 or self.snake.head_position[0] > self.x_lim or self.snake.head_position[
             1] < 0 or \
@@ -37,18 +41,15 @@ class SnakeGame:
         if self.points >= 1000 * 3:
             self.end_flag = True
 
-    def screen_draw(self):
-        self.screen.fill(self.bg)
-        x0 = int(self.snake.head_position[0]) - self.radio * 10
-        x1 = int(self.snake.head_position[0]) + self.radio * 10
-        y0 = int(self.snake.head_position[1]) - self.radio * 10
-        y1 = int(self.snake.head_position[1]) + self.radio * 10
-        pygame.draw.lines(self.screen, self.snake.vision_raidio_color, True, [(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
-        pygame.draw.rect(self.screen, self.snake.head_color,
-                         (self.snake.head_position[0], self.snake.head_position[1], 10, 10))
-        for b in self.snake.body:
-            pygame.draw.rect(self.screen, self.snake.body_color, (b[0], b[1], 10, 10))
-        pygame.draw.rect(self.screen, self.food.color, (self.food.position[0], self.food.position[1], 10, 10))
+    def ai_directive(self, direction):
+        if direction == 3 and self.snake.direction != 2:
+            self.snake.direction = direction
+        if direction == 0 and self.snake.direction != 1:
+            self.snake.direction = direction
+        if direction == 1 and self.snake.direction != 0:
+            self.snake.direction = direction
+        if direction == 2 and self.snake.direction != 3:
+            self.snake.direction = direction
 
     def check_user_events(self):
         for event in pygame.event.get():
@@ -64,32 +65,35 @@ class SnakeGame:
                 if event.key == pygame.K_LEFT and self.snake.direction != 3:
                     self.snake.direction = 2
 
-    def ai_directive(self, direction):
-        if direction == 3 and self.snake.direction != 2:
-            self.snake.direction = direction
-        if direction == 0 and self.snake.direction != 1:
-            self.snake.direction = direction
-        if direction == 1 and self.snake.direction != 0:
-            self.snake.direction = direction
-        if direction == 2 and self.snake.direction != 3:
-            self.snake.direction = direction
+    def screen_draw(self):
+        self.screen.fill(self.bg)
+        x0 = int(self.snake.head_position[0]) - self.radio * 10
+        x1 = int(self.snake.head_position[0]) + self.radio * 10
+        y0 = int(self.snake.head_position[1]) - self.radio * 10
+        y1 = int(self.snake.head_position[1]) + self.radio * 10
+        pygame.draw.lines(self.screen, self.snake.vision_raidio_color, True, [(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
+        pygame.draw.rect(self.screen, self.snake.head_color,
+                         (self.snake.head_position[0], self.snake.head_position[1], 10, 10))
+        for b in self.snake.body:
+            pygame.draw.rect(self.screen, self.snake.body_color, (b[0], b[1], 10, 10))
+        pygame.draw.rect(self.screen, self.food.color, (self.food.position[0], self.food.position[1], 10, 10))
+        pygame.display.flip()
 
-    def play(self):
-        """
-        Playable version of snake
+    def light_tasks(self):
+        self.snake.move()
+        self.check_events()
 
-        """
-        pygame.display.set_caption("Super snake bros 3 The Fall of Reach: Revenge")
-        self.food.go_new_position()
-        while True:
-            pygame.display.flip()
-            self.clock.tick(80)
-            self.check_user_events()
-            self.snake.move()
-            self.screen_draw()
-            self.check_events()
-            if self.end_flag:
-                return self.points
+    def background_tasks(self):
+        self.light_tasks()
+        self.clock.tick(80)
+        self.screen_draw()
+
+    def ql_pre_tasks(self, settler):
+        old_board = self.board2set()
+        old_points = self.points
+        old_dist = dist(self.snake.head_position, self.food.position)
+        policy = settler.interact(old_board)
+        return old_board, old_dist, old_points, policy
 
     def board2set(self):
         xdir = 0
@@ -118,40 +122,26 @@ class SnakeGame:
         s = sens + [self.snake.direction, xdir, ydir]
         return s
 
-    def demo(self, settler):
-        pygame.display.set_caption("Super snake bros 3 The Fall of Reach: Revenge")
-        self.food.go_new_position()
+    def play(self):
+        self.load_new_game()
         while True:
-            pygame.display.flip()
-            old_board = self.board2set()
-            old_points = self.points
-            old_dist = dist(self.snake.head_position, self.food.position)
-            policy = settler.interact(old_board)
-            self.ai_directive(policy)
-            self.snake.move()
-            self.check_events()
-            self.clock.tick(80)
-            self.screen_draw()
-            settler.update_q(
-                old_board,
-                self.board2set(),
-                state2int(self.points - old_points,
-                          dp_reward(old_dist, dist(self.snake.head_position, self.food.position))),
-                policy
-            )
+            self.check_user_events()
+            self.background_tasks()
             if self.end_flag:
-                return settler
+                return self.points
 
-    def demo_light(self, settler):
-        self.food.go_new_position()
+    def demo(self, settler, light_mode=False):
+        if light_mode:
+            self.food.go_new_position()
+        else:
+            self.load_new_game()
         while True:
-            old_board = self.board2set()
-            old_points = self.points
-            old_dist = dist(self.snake.head_position, self.food.position)
-            policy = settler.interact(old_board)
+            old_board, old_dist, old_points, policy = self.ql_pre_tasks(settler)
             self.ai_directive(policy)
-            self.snake.move()
-            self.check_events()
+            if light_mode:
+                self.light_tasks()
+            else:
+                self.background_tasks()
             settler.update_q(
                 old_board,
                 self.board2set(),
