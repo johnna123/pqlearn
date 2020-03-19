@@ -8,6 +8,10 @@ from snake_game import SnakeGame
 
 def train(iters, warm_start=False, verbose=False, learning_rate=0.8, gamma=0.8, epsilon=0.2,
           dont_repeat=False, name="memory.pkl"):
+    """
+    QLearn usage example training in the Snake environment
+
+    """
     if warm_start:
         ai = joblib.load(name)
     else:
