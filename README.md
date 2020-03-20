@@ -1,4 +1,12 @@
 # Q-Learn
-Simple Q-Learn implementation
+Simple Q-Learning algorithm implementation for Python 3.5
 
-This is a private project, even if you manage to see it, i don't give any kind of permision over it :C
+Usage:
+This is only a sample proyect but if you find it useful you are free to use it (see LICENSE file)
+
+Example in snake_train.py
+
+Use at your own risk
+
+Need help?
+ Me too
