@@ -2,7 +2,7 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from qlearn import QLearn
+from pqlearn import QLearn
 from snake_game import SnakeGame
 
 
