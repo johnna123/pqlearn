@@ -7,7 +7,7 @@ from snake_game import SnakeGame
 
 
 def train(iters, warm_start=False, verbose=False, learning_rate=0.8, gamma=0.8, epsilon=0.2,
-          dont_repeat=False, name="memory.pkl"):
+          dont_repeat=False, name="snake_ai.pkl"):
     """
     QLearn usage example training in the Snake environment
 
@@ -35,4 +35,4 @@ def train(iters, warm_start=False, verbose=False, learning_rate=0.8, gamma=0.8, 
 
 
 if __name__ == '__main__':
-    train(2000, epsilon=0.8, dont_repeat=True, warm_start=True, name="ignore_test")
+    train(1000, epsilon=0.8, dont_repeat=True)
