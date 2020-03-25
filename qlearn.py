@@ -1,14 +1,15 @@
 import random
 
+import joblib
 import numpy as np
 
 
 class QLearn:
-    def __init__(self, labels, learning_rate=0.7, gamma=0.8, epsilon=0.1, no_repeat=False, verbose=False):
+    def __init__(self, policies, learning_rate=0.7, gamma=0.8, epsilon=0.1, no_repeat=False, verbose=False):
         """
         Q-learn object
 
-        :param labels: The list of symbols that represents every possible policy
+        :param policies: The Set of symbols that represents every possible policy
         :param learning_rate:
         :param gamma:
         :param epsilon: Chances of taking random policy every new interaction
@@ -17,25 +18,28 @@ class QLearn:
         """
         self.epsilon = epsilon
         self.data = {}
-        self.labels = labels
+        self.policies = policies
         self.learning_rate = learning_rate
         self.gamma = gamma
         self.verbose = verbose
         self.memory = dict()
         self.no_repeat = no_repeat
 
+    def save_model(self, name):
+        joblib.dump(self, name)
+
     def push_q_data(self, state):
         """
-        Makes sure that state is known by q-learn
+        Makes sure that state is known by q-learn object
 
         :param state: State representation
         :type state: str
         :return:
         """
         if state not in self.data.keys():
-            self.data[state] = np.zeros(len(self.labels))
+            self.data[state] = np.zeros(len(self.policies))
         if state not in self.memory.keys():
-            self.memory[state] = np.zeros(len(self.labels))
+            self.memory[state] = np.zeros(len(self.policies))
 
     def select_best(self, state):
         """
@@ -47,7 +51,7 @@ class QLearn:
         """
         if self.verbose:
             print("select from: {}".format(self.data[state]))
-        return self.labels[self.data[state].argmax()]
+        return self.policies[self.data[state].argmax()]
 
     def select_random(self, policies):
         """
@@ -73,7 +77,7 @@ class QLearn:
         self.push_q_data(state)
         for i in range(len(self.memory[state])):
             if self.memory[state][i] == 0:
-                not_explored.append(self.labels[i])
+                not_explored.append(self.policies[i])
         if not_explored:
             return self.select_random(not_explored)
         else:
@@ -93,7 +97,7 @@ class QLearn:
             if self.no_repeat:
                 return self.select_rand_not_explored(state)
             else:
-                return self.select_random(self.labels)
+                return self.select_random(self.policies)
         else:
             return self.select_best(state)
 
@@ -118,10 +122,10 @@ class QLearn:
         actual_state = str(actual_state)
         self.push_q_data(actual_state)
         self.push_q_data(old_state)
-        self.memory[old_state][policy] = 1
+        self.memory[old_state][self.policies.index(policy)] = 1
         qt = self.data[actual_state].max()
-        self.data[old_state][policy] = self.data[old_state][policy] + self.learning_rate * (
-                reward + (self.gamma * qt) - self.data[old_state][policy])
+        self.data[old_state][self.policies.index(policy)] = self.data[old_state][self.policies.index(policy)] + self.learning_rate * (
+                reward + (self.gamma * qt) - self.data[old_state][self.policies.index(policy)])
         if self.verbose:
             print("old: {}".format(old_state))
             print("actual: {}".format(actual_state))
