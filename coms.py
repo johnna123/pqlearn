@@ -1,4 +1,10 @@
+import os
+
 import numpy
+
+
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def dist_reward(old, act):

@@ -184,7 +184,7 @@ class SnakeGame:
 
 if __name__ == '__main__':
     game = SnakeGame()
-    ai = joblib.load("memory.pkl")
+    ai = joblib.load("snake_ai.pkl")
     ai.learning_rate = 0
     ai.gamma = 0
     ai.epsilon = 0
