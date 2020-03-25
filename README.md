@@ -1,5 +1,5 @@
 # Q-Learn
-Simple Q-Learning algorithm implementation for Python 3.5
+Simple Q-Learning algorithm implementation for Python 3.7
 
 This project allows to perform q-learning algorithm with 3 lines of code
 
@@ -13,8 +13,10 @@ Usage:
     
     Use at your own risk
 
-*****************************************************************************************************
 
-Need help? Me too
 
-*****************************************************************************************************
+Need help? 
+
+    Me too
+
+
