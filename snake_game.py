@@ -164,6 +164,7 @@ class SnakeGame:
         else:
             self.load_new_game()
         while True:
+            pygame.event.pump()
             old_board, old_dist, old_points, policy = self.ql_pre_tasks(settler)
             self.ai_directive(policy)
             if light_mode:
@@ -184,9 +185,11 @@ class SnakeGame:
 
 if __name__ == '__main__':
     game = SnakeGame()
+
     ai = joblib.load("snake_ai.pkl")
     ai.learning_rate = 0
     ai.gamma = 0
     ai.epsilon = 0
     game.demo(ai)
-    game.play()
+
+    # game.play()
